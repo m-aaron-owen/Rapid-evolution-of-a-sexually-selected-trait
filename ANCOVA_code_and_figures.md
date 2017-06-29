@@ -125,7 +125,8 @@ if (var.test(india.m$ap.c, india.f$ap.c)$p.value < 0.05) {
 
 ``` r
 ## Now to provide more evidence that this trait is under sexual selection,
-## we want to determine if it is related to individual condition in males and not females.
+## we want to determine if it is related to individual condition in males and not females,
+## as this is a much stronger indicator of sexual selection than sexual dimorphism.
 ## Let's visualize the data by plotting anal pad size and condition for both sexes on same graph:
 ggplot(india, aes(x = cond2, y = ap, color = sex)) +
     geom_point() +
