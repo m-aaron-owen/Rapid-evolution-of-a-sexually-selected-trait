@@ -1,6 +1,9 @@
 Rapid evolution of a sexually selected trait
 ================
 
+Step 1: Prepare data
+--------------------
+
 ``` r
 ## Read in data
 ## Create male and female subsets
@@ -46,16 +49,19 @@ summarySE = function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 }
 ```
 
-Investigate features from the native range of India
-===================================================
+Step 2: Investigate features from the native range of India
+-----------------------------------------------------------
 
-### The anal pad is an important tool for scent marking, a behavior thought to be used in mate attraction
+#### Sexual dimorphism in traits and their characteristics is often a hallmark of sexual selection
+
+#### The anal pad is an important tool for scent marking, a behavior thought to be used by males to attract mates
 
 ``` r
-## uses function to summarize descriptive statistics of the trait "ap.c"
-## and puts them into plot-able (long) format.
-## "ap.c" is the size of the animal's scent-marking tool, the anal pad, 
-## after controlling for body length
+## Uses the newly created "summarySE" function to summarize data of the trait "ap.c"
+## and puts the results into plot-able (long) format.
+## The variable "ap.c" is the size of the anal pad, after correcting for body length.
+## This correction is necessary to allow for males and females to be directly compared,
+## as males are larger than females.
 india_plot_data = summarySE(india, measurevar = "ap.c", groupvars = "sex")
 print(india_plot_data)
 ```
@@ -64,11 +70,12 @@ print(india_plot_data)
     ## 1   F 19 0.1509505 0.02987241 0.006853201 0.01439804
     ## 2   M 23 0.3604562 0.06824933 0.014230968 0.02951322
 
+#### Visualize the data
+
 ``` r
 ## loads ggplot
 library(ggplot2)
 
-## To understand the data, we should first visualize them
 ## This plots means and standard errors of both sexes on same plot
 ggplot(india_plot_data, aes(x = sex, y = ap.c)) + 
     geom_errorbar(aes(ymin = ap.c-se, ymax = ap.c + se), width = 0.25) + 
@@ -84,8 +91,12 @@ ggplot(india_plot_data, aes(x = sex, y = ap.c)) +
 ![](ANCOVA_code_and_figures_files/figure-markdown_github/unnamed-chunk-4-1.png)
 
 ``` r
-## The plot clearly shows a sex difference, but we need to be sure.
-## Sexual dimorphism is often a hallmark of a sexually selected trait.
+## The plot clearly shows a sex difference, but we need to be sure
+```
+
+#### Apply statistics
+
+``` r
 ## The code first uses an F-test to test for homogeneity of variance between males and females,
 ## then, based on the results, performs the appropriate t-test to compare means.
 if (var.test(india.m$ap.c, india.f$ap.c)$p.value < 0.05) {
@@ -107,7 +118,12 @@ if (var.test(india.m$ap.c, india.f$ap.c)$p.value < 0.05) {
     ## 0.3604562 0.1509505
 
 ``` r
-## The t-test revealed that males do indeed posess larger anal pads.
+## The t-test revealed that males do indeed posses larger anal pads.
+```
+
+#### More evidence: visualize sexual dimorphism in the relationship between the anal pad and body condition
+
+``` r
 ## Now to provide more evidence that this trait is under sexual selection,
 ## we want to determine if it is related to individual condition in males and not females.
 ## Let's visualize the data by plotting anal pad size and condition for both sexes on same graph:
@@ -131,11 +147,16 @@ ggplot(india, aes(x = cond2, y = ap, color = sex)) +
 
 ``` r
 ## The warning message is because one individual's condition metric could not be calculated
+
+## There definitely appears to be a difference in slopes, but we need to be sure.
 ```
 
+#### Apply more statistics
+
 ``` r
-## There does appear to be a difference in slopes, but to be sure, we need to perform
-## an ANCOVA (analysis of covariance) to determine if the slopes differ by sex
+## Here I use an ANCOVA (analysis of covariance) to determine if the slopes
+## of the lines differ by sex. Or put another way, if the relationship between
+## anal pad size and body condition co-varies with sex.
 summary(aov(ap~cond2*sex, data = india))
 ```
 
@@ -150,28 +171,45 @@ summary(aov(ap~cond2*sex, data = india))
 
 ``` r
 ## And the interaction term "cond2:sex" is indeed significant, suggesting the trait
-## is condition dependent in males but not females.
+## is condition dependent in males but not females. 
 ```
 
-Compare native range to introduced range
-========================================
+#### Conclusion: Following sexual selection theory: pretty strong indirect evidence that the anal pad is under sexual selection in males but not females
 
-To determine if any changes have occured since introduction
------------------------------------------------------------
+Step 3: Compare native range to introduced range
+================================================
+
+#### Prepare the data
 
 ``` r
-## summarizes the global data for "ap.c" and puts it into plot-able (long) form
+## Summarizes the global data for "ap.c" and puts them into plot-able (long) form
 global_plot_data = summarySE(mongoose, measurevar = "ap.c", groupvars = c("sex", "location"))
+print(global_plot_data)
 ```
 
+    ##    sex  location  N      ap.c         sd          se          ci
+    ## 1    F    Hawaii 21 0.1438928 0.03161019 0.006897908 0.014388784
+    ## 2    F     India 19 0.1509505 0.02987241 0.006853201 0.014398040
+    ## 3    F   Jamaica 22 0.1294248 0.02873154 0.006125585 0.012738852
+    ## 4    F Mauritius 22 0.1530527 0.02168637 0.004623549 0.009615197
+    ## 5    F St. Croix 27 0.1414002 0.02679135 0.005155998 0.010598306
+    ## 6    M    Hawaii 33 0.2419411 0.05132566 0.008934650 0.018199287
+    ## 7    M     India 23 0.3604562 0.06824933 0.014230968 0.029513222
+    ## 8    M   Jamaica 30 0.2373840 0.04552360 0.008311434 0.016998791
+    ## 9    M Mauritius 16 0.2816991 0.04544050 0.011360126 0.024213535
+    ## 10   M St. Croix 47 0.2494632 0.04315303 0.006294516 0.012670204
+
+#### Visualize the data
+
 ``` r
-## plots means and st.err of both sexes on same plot
+## plots means and standard errors of both sexes on same plot
 ggplot(global_plot_data, aes(x = location, y = ap.c, color = sex)) + 
     geom_errorbar(aes(ymin = ap.c-se, ymax = ap.c + se), width = 0.25) + 
     geom_point() + 
     scale_x_discrete(limits=c("India","Mauritius","St. Croix","Hawaii","Jamaica")) + 
     labs(
-        x = "Location", y = "Relative Anal Pad", title = "Global Comparison") + 
+        x = "Location (ordered by time since introduction)", y = "Relative Anal Pad",
+        title = "Global Sexual Size Dimorphism") + 
     theme_bw() + 
     theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(), axis.line.x = element_line(color = "black"), 
@@ -181,7 +219,16 @@ ggplot(global_plot_data, aes(x = location, y = ap.c, color = sex)) +
 ![](ANCOVA_code_and_figures_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 ``` r
-## analysis of variance between males
+## Notice that male anal pads seem to gradually get smaller based on the 
+## length of time since introduction.
+## Female anal pads do not appear to have changed.
+```
+
+#### Apply statistics
+
+``` r
+## Perform an ANOVA (anlysis of variance) to determine if males differ in the size of their
+## anal pad across locations
 summary(aov(ap.c~location, data = male))
 ```
 
@@ -192,7 +239,9 @@ summary(aov(ap.c~location, data = male))
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-## post hoc, pairwise comparisons between locations for males
+## The ANOVA's p-value shows that there is a significant difference between locations
+## but we need a post hoc, pairwise comparisons between locations to know which specific 
+## locations are different from each other
 TukeyHSD(aov(ap.c~location, data = male))
 ```
 
@@ -215,6 +264,13 @@ TukeyHSD(aov(ap.c~location, data = male))
     ## St. Croix-Mauritius -0.032235900 -0.072411436  0.007939637 0.1794531
 
 ``` r
+## Notice: 1) all locations are different from India, 2) no introduced locations are different
+## except the Mauritius-Jamaica comparison. This is because there is such a big difference between
+## these locations in the time that mongooses have been present. 
+## This gradual, uniform change suggests it is a product of adaptation (i.e., evolution)
+```
+
+``` r
 ## analysis of variance between females
 summary(aov(ap.c~location, data = female))
 ```
@@ -226,11 +282,21 @@ summary(aov(ap.c~location, data = female))
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-## plots relationship of anal pad and condition for each location for males
+## Although approaching significance, there is no difference between anal pads of females 
+## from different locations
+```
+
+#### Visualize the data: any change in condition-dependence?
+
+``` r
+## Is there a difference in the relationship between anal pad size and body condition
+## in males across locations?
 ggplot(male, aes(x = cond2, y = ap, color = location, shape = location)) + 
     geom_point() + 
-    scale_color_manual(name = "Location", labels = c("Hawaii", "India", "Jamaica", "Mauritius", "St. Croix"), values = c(1,2,3,4,5)) + 
-    scale_shape_manual(name = "Location", labels = c("Hawaii", "India", "Jamaica", "Mauritius", "St. Croix"), values = c(1,2,3,4,5)) + 
+    scale_color_manual(name = "Location", labels = c("Hawaii", "India", "Jamaica", 
+                                                     "Mauritius", "St. Croix"), values = c(1,2,3,4,5)) + 
+    scale_shape_manual(name = "Location", labels = c("Hawaii", "India", "Jamaica", 
+                                                     "Mauritius", "St. Croix"), values = c(1,2,3,4,5)) + 
     geom_smooth(method = lm, se = F) + 
     labs(
         x = "Condition" ,  y = (bquote("Anal Pad ("*mm^2*")")), title = "Males") + 
@@ -248,25 +314,41 @@ ggplot(male, aes(x = cond2, y = ap, color = location, shape = location)) +
 ![](ANCOVA_code_and_figures_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 ``` r
-## ancova: do the different populations of males have significantly different relationships between anal pad and body condition?
-summary(aov(ap.c~cond2*location, data = male))
+## The warning message is because four individuals' condition metrics could not be calculated
+
+## The Indian slope seems steeper, but let's make sure
 ```
 
-    ##                 Df  Sum Sq Mean Sq F value  Pr(>F)    
-    ## cond2            1 0.01897 0.01897   9.717 0.00223 ** 
-    ## location         4 0.31101 0.07775  39.819 < 2e-16 ***
-    ## cond2:location   4 0.01978 0.00494   2.532 0.04324 *  
-    ## Residuals      135 0.26361 0.00195                    
+``` r
+## Here I perform another ANCOVA to test for differences in slopes of the lines
+summary(aov(ap~cond2*location, data = male))
+```
+
+    ##                 Df Sum Sq Mean Sq F value  Pr(>F)    
+    ## cond2            1   6523    6523   8.553 0.00405 ** 
+    ## location         4  88048   22012  28.864 < 2e-16 ***
+    ## cond2:location   4   8014    2003   2.627 0.03729 *  
+    ## Residuals      135 102954     763                    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 4 observations deleted due to missingness
 
 ``` r
-## plots relationship of anal pad and condition for each location for females
+## The "cond2:location" interaction term is significant, suggesting the slopes
+## of the lines are different. Or in other words, the level of condition dependence
+## of the anal pad has become weaker in introduced populations, suggesting a relaxation
+## of sexual selection.
+```
+
+``` r
+## What about females? Does the relationship between anal pad size and body condition
+## differ across locations?
 ggplot(female, aes(x = cond2, y = ap, color = location, shape = location)) + 
     geom_point() + 
-    scale_color_manual(name = "Location", labels = c("Hawaii", "India", "Jamaica", "Mauritius", "St. Croix"), values = c(1,2,3,4,5)) + 
-    scale_shape_manual(name = "Location", labels = c("Hawaii", "India", "Jamaica", "Mauritius", "St. Croix"), values = c(1,2,3,4,5)) + 
+    scale_color_manual(name = "Location", labels = c("Hawaii", "India", "Jamaica", 
+                                                     "Mauritius", "St. Croix"), values = c(1,2,3,4,5)) + 
+    scale_shape_manual(name = "Location", labels = c("Hawaii", "India", "Jamaica", 
+                                                     "Mauritius", "St. Croix"), values = c(1,2,3,4,5)) + 
     geom_smooth(method = lm, se = F) + 
     labs(
         x = "Condition",  y = (bquote("Anal Pad ("*mm^2*")")), title = "Females") + 
@@ -280,14 +362,24 @@ ggplot(female, aes(x = cond2, y = ap, color = location, shape = location)) +
 ![](ANCOVA_code_and_figures_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 ``` r
-## ancova: do the different populations of females have significantly different relationships between anal pad and body condition?
-summary(aov(ap.c~cond2*location, data = female))
+## It doesn't look like it, but let's make sure
 ```
 
-    ##                 Df  Sum Sq   Mean Sq F value Pr(>F)  
-    ## cond2            1 0.00087 0.0008673   1.082 0.3007  
-    ## location         4 0.00674 0.0016843   2.102 0.0861 .
-    ## cond2:location   4 0.00091 0.0002279   0.284 0.8875  
-    ## Residuals      101 0.08095 0.0008015                 
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+``` r
+## Another ANCOVA
+summary(aov(ap~cond2*location, data = female))
+```
+
+    ##                 Df Sum Sq Mean Sq F value Pr(>F)
+    ## cond2            1    274  274.04   1.152  0.286
+    ## location         4    643  160.79   0.676  0.610
+    ## cond2:location   4    261   65.21   0.274  0.894
+    ## Residuals      101  24032  237.94
+
+``` r
+## Results suggest no change in females regarding the relationship of anal pad size and body condition
+```
+
+#### Overall conclusion 1: Anal pads shrank in size and displayed a weakened relationship with body condition in males but not females of introduced mongooses.
+
+#### Overall conclusion 2: Because these changes occured gradually and in fewer than 145 years suggests rapid evolution, the first ever reported of a sexually selected trait in a mammal.
